@@ -20,7 +20,7 @@ from torchvision import datasets, transforms, models
 class Config:
     DATA_DIR = Path("/mnt/ramdisk/dataset_9_class")
     MODEL_PATH = Path("./checkpoints/checkpoints_resnet34_v6/best_f1_model.pth")
-    OUTPUT_DIR = Path("./audit_for_v6")
+    OUTPUT_DIR = Path("./dataset/audit_for_v6")
 
     TARGET_CLASSES = [
         "NoPackage",
