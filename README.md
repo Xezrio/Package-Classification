@@ -1,7 +1,8 @@
+```shell
+# daily
 cd /mnt/F/xezrio/PackageClassification/
 tmux
 source myenv/bin/activate
-# daily
 
 
 # 文件数量统计
@@ -40,6 +41,8 @@ Reflection
 InsufficientLighting
 
 BlurryFocus
+
+```shell
 
 
 **NR类型**
