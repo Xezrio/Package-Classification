@@ -17,7 +17,8 @@ myenv/
 # model weights
 # *.pth
 # *.pt
-# checkpoints/
+checkpoints/resnet18_4cls
+checkpoints/resnet18_4cls_vfinal
 
 # system files
 .DS_Store
