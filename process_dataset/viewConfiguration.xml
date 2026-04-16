@@ -1,0 +1,43 @@
+<View>
+  <Style>
+    .container { display: flex; justify-content: space-between; gap: 1px; }
+    .column { 
+      flex: 1; 
+      border: 1px solid #e6e6e6; 
+      padding: 10px; 
+      border-radius: 4px;
+    }
+  </Style>
+
+  <View className="container">
+    <View className="column">
+      <Header value="正面"/>
+      <Image name="img_front" value="$front" width="100%" zoom="true"/>
+      <Choices name="reason_front" toName="img_front" choice="single" layout="inline">
+        <Choice value="正常识别"/><Choice value="无包裹"/><Choice value="无面单"/>
+        <Choice value="条码截断"/><Choice value="面单褶皱"/><Choice value="面单模糊"/>
+        <Choice value="反光"/><Choice value="光线不足"/><Choice value="对焦模糊"/>
+      </Choices>
+    </View>
+
+    <View className="column">
+      <Header value="背面"/>
+      <Image name="img_back" value="$back" width="100%" zoom="true"/>
+      <Choices name="reason_back" toName="img_back" choice="single" layout="inline">
+        <Choice value="正常识别"/><Choice value="无包裹"/><Choice value="无面单"/>
+        <Choice value="条码截断"/><Choice value="面单褶皱"/><Choice value="面单模糊"/>
+        <Choice value="反光"/><Choice value="光线不足"/><Choice value="对焦模糊"/>
+      </Choices>
+    </View>
+
+    <View className="column">
+      <Header value="顶部"/>
+      <Image name="img_top" value="$top" width="100%" zoom="true" zoomControl="true" rotateControl="false"/>
+      <Choices name="reason_top" toName="img_top" choice="single" layout="inline">
+        <Choice value="正常识别"/><Choice value="无包裹"/><Choice value="无面单"/>
+        <Choice value="条码截断"/><Choice value="面单褶皱"/><Choice value="面单模糊"/>
+        <Choice value="反光"/><Choice value="光线不足"/><Choice value="对焦模糊"/>
+      </Choices>
+    </View>
+  </View>
+</View>

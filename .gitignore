@@ -1,0 +1,23 @@
+# dataset
+dataset/
+
+# python cache
+__pycache__/
+*.pyc
+
+# virtual env
+venv/
+.env/
+myenv/
+
+# logs
+# logs/
+# *.log
+
+# model weights
+# *.pth
+# *.pt
+# checkpoints/
+
+# system files
+.DS_Store
