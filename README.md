@@ -17,7 +17,8 @@ rsync -av /mnt/F/xezrio/PackageClassification/dataset/dataset_9_class /mnt/ramdi
 mkdir -p /mnt/ramdisk/dataset_9_class
 rsync -av --delete /mnt/F/xezrio/PackageClassification/dataset/dataset_9_class/ /mnt/ramdisk/dataset_9_class/
 
-
+# 当前目录下的子文件夹大小
+du -h --max-depth=1
 
 
 # 需求 (9类，按照优先级排序)
