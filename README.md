@@ -42,7 +42,7 @@ InsufficientLighting
 
 BlurryFocus
 
-```shell
+
 
 
 **NR类型**

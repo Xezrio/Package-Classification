@@ -33,7 +33,7 @@ class Config:
     INPUT_W = 560
 
     BATCH_SIZE = 32
-    NUM_WORKERS = min(12, max(2, (os.cpu_count() or 8) - 2))
+    NUM_WORKERS = min(32, max(2, (os.cpu_count() or 8) - 2))
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     MASK_THUMBNAIL = True

@@ -1,0 +1,292 @@
+2026-04-18 17:17:54,816 - INFO - 训练类别: ['NoPackage', 'NoWaybill', 'TruncatedBarcode', 'WrinkledWaybill']
+2026-04-18 17:17:54,817 - INFO - Train class distribution:
+2026-04-18 17:17:54,817 - INFO -   - NoPackage           : 505
+2026-04-18 17:17:54,817 - INFO -   - NoWaybill           : 5147
+2026-04-18 17:17:54,817 - INFO -   - TruncatedBarcode    : 1967
+2026-04-18 17:17:54,817 - INFO -   - WrinkledWaybill     : 1465
+2026-04-18 17:17:54,817 - INFO - Val class distribution:
+2026-04-18 17:17:54,817 - INFO -   - NoPackage           : 60
+2026-04-18 17:17:54,817 - INFO -   - NoWaybill           : 112
+2026-04-18 17:17:54,817 - INFO -   - TruncatedBarcode    : 61
+2026-04-18 17:17:54,817 - INFO -   - WrinkledWaybill     : 50
+2026-04-18 17:17:54,817 - INFO - Hard Val class distribution:
+2026-04-18 17:17:54,817 - INFO -   - NoPackage           : 1
+2026-04-18 17:17:54,817 - INFO -   - NoWaybill           : 2
+2026-04-18 17:17:54,817 - INFO -   - TruncatedBarcode    : 6
+2026-04-18 17:17:54,817 - INFO -   - WrinkledWaybill     : 1
+2026-04-18 17:17:56,880 - INFO - Training on device: cuda
+2026-04-18 17:17:56,881 - INFO - Classes: ['NoPackage', 'NoWaybill', 'TruncatedBarcode', 'WrinkledWaybill']
+2026-04-18 17:17:56,881 - INFO - Input size: 448x560
+2026-04-18 17:17:56,881 - INFO - Batch size: 32, Epochs: 30
+2026-04-18 17:22:53,726 - INFO - Epoch 01 | Loss: 0.2855 | Val Acc: 0.7774 | Val Macro-F1: 0.7689 | LR: 2.000000e-04
+2026-04-18 17:22:53,727 - INFO -   [NoPackage         ] P: 0.9608 | R: 0.8167 | F1: 0.8829 | N: 60
+2026-04-18 17:22:53,727 - INFO -   [NoWaybill         ] P: 0.9062 | R: 0.7768 | F1: 0.8365 | N: 112
+2026-04-18 17:22:53,727 - INFO -   [TruncatedBarcode  ] P: 0.8293 | R: 0.5574 | F1: 0.6667 | N: 61
+2026-04-18 17:22:53,727 - INFO -   [WrinkledWaybill   ] P: 0.5263 | R: 1.0000 | F1: 0.6897 | N: 50
+2026-04-18 17:22:53,727 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           49              2               2               7               
+NoWaybill           2               87              5               18              
+TruncatedBarcode    0               7               34              20              
+WrinkledWaybill     0               0               0               50              
+2026-04-18 17:22:53,827 - INFO - [F1 Improved] Saved to checkpoints/checkpoints_resnet34_v6_round_2/best_f1_model.pth
+2026-04-18 17:22:53,898 - INFO - [Acc Improved] Saved to checkpoints/checkpoints_resnet34_v6_round_2/best_acc_model.pth
+2026-04-18 17:22:53,977 - INFO - Best Classification Report:
+                  precision    recall  f1-score   support
+
+       NoPackage       0.96      0.82      0.88        60
+       NoWaybill       0.91      0.78      0.84       112
+TruncatedBarcode       0.83      0.56      0.67        61
+ WrinkledWaybill       0.53      1.00      0.69        50
+
+        accuracy                           0.78       283
+       macro avg       0.81      0.79      0.77       283
+    weighted avg       0.83      0.78      0.78       283
+
+2026-04-18 17:27:26,962 - INFO - Epoch 02 | Loss: 0.1365 | Val Acc: 0.8622 | Val Macro-F1: 0.8621 | LR: 2.000000e-04
+2026-04-18 17:27:26,962 - INFO -   [NoPackage         ] P: 1.0000 | R: 0.8333 | F1: 0.9091 | N: 60
+2026-04-18 17:27:26,962 - INFO -   [NoWaybill         ] P: 0.8621 | R: 0.8929 | F1: 0.8772 | N: 112
+2026-04-18 17:27:26,962 - INFO -   [TruncatedBarcode  ] P: 0.7391 | R: 0.8361 | F1: 0.7846 | N: 61
+2026-04-18 17:27:26,962 - INFO -   [WrinkledWaybill   ] P: 0.8958 | R: 0.8600 | F1: 0.8776 | N: 50
+2026-04-18 17:27:26,962 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           50              5               4               1               
+NoWaybill           0               100             10              2               
+TruncatedBarcode    0               8               51              2               
+WrinkledWaybill     0               3               4               43              
+2026-04-18 17:27:27,380 - INFO - [F1 Improved] Saved to checkpoints/checkpoints_resnet34_v6_round_2/best_f1_model.pth
+2026-04-18 17:27:27,983 - INFO - [Acc Improved] Saved to checkpoints/checkpoints_resnet34_v6_round_2/best_acc_model.pth
+2026-04-18 17:27:28,493 - INFO - Best Classification Report:
+                  precision    recall  f1-score   support
+
+       NoPackage       1.00      0.83      0.91        60
+       NoWaybill       0.86      0.89      0.88       112
+TruncatedBarcode       0.74      0.84      0.78        61
+ WrinkledWaybill       0.90      0.86      0.88        50
+
+        accuracy                           0.86       283
+       macro avg       0.87      0.86      0.86       283
+    weighted avg       0.87      0.86      0.86       283
+
+2026-04-18 17:31:59,556 - INFO - Epoch 03 | Loss: 0.1017 | Val Acc: 0.8304 | Val Macro-F1: 0.8302 | LR: 2.000000e-04
+2026-04-18 17:31:59,557 - INFO -   [NoPackage         ] P: 0.9811 | R: 0.8667 | F1: 0.9204 | N: 60
+2026-04-18 17:31:59,557 - INFO -   [NoWaybill         ] P: 0.9271 | R: 0.7946 | F1: 0.8558 | N: 112
+2026-04-18 17:31:59,557 - INFO -   [TruncatedBarcode  ] P: 0.6429 | R: 0.8852 | F1: 0.7448 | N: 61
+2026-04-18 17:31:59,557 - INFO -   [WrinkledWaybill   ] P: 0.8000 | R: 0.8000 | F1: 0.8000 | N: 50
+2026-04-18 17:31:59,557 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           52              1               6               1               
+NoWaybill           1               89              15              7               
+TruncatedBarcode    0               5               54              2               
+WrinkledWaybill     0               1               9               40              
+2026-04-18 17:36:25,149 - INFO - Epoch 04 | Loss: 0.0926 | Val Acc: 0.8375 | Val Macro-F1: 0.8368 | LR: 2.000000e-04
+2026-04-18 17:36:25,150 - INFO -   [NoPackage         ] P: 0.9038 | R: 0.7833 | F1: 0.8393 | N: 60
+2026-04-18 17:36:25,150 - INFO -   [NoWaybill         ] P: 0.8922 | R: 0.8125 | F1: 0.8505 | N: 112
+2026-04-18 17:36:25,150 - INFO -   [TruncatedBarcode  ] P: 0.7391 | R: 0.8361 | F1: 0.7846 | N: 61
+2026-04-18 17:36:25,150 - INFO -   [WrinkledWaybill   ] P: 0.8000 | R: 0.9600 | F1: 0.8727 | N: 50
+2026-04-18 17:36:25,150 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           47              4               6               3               
+NoWaybill           4               91              10              7               
+TruncatedBarcode    1               7               51              2               
+WrinkledWaybill     0               0               2               48              
+2026-04-18 17:40:46,190 - INFO - Epoch 05 | Loss: 0.0677 | Val Acc: 0.8339 | Val Macro-F1: 0.8249 | LR: 2.000000e-04
+2026-04-18 17:40:46,190 - INFO -   [NoPackage         ] P: 1.0000 | R: 0.5667 | F1: 0.7234 | N: 60
+2026-04-18 17:40:46,190 - INFO -   [NoWaybill         ] P: 0.8000 | R: 0.9286 | F1: 0.8595 | N: 112
+2026-04-18 17:40:46,190 - INFO -   [TruncatedBarcode  ] P: 0.7534 | R: 0.9016 | F1: 0.8209 | N: 61
+2026-04-18 17:40:46,191 - INFO -   [WrinkledWaybill   ] P: 0.9348 | R: 0.8600 | F1: 0.8958 | N: 50
+2026-04-18 17:40:46,191 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           34              17              8               1               
+NoWaybill           0               104             6               2               
+TruncatedBarcode    0               6               55              0               
+WrinkledWaybill     0               3               4               43              
+2026-04-18 17:40:46,501 - INFO - [Periodic Save] latest checkpoint updated at epoch 5
+2026-04-18 17:44:41,485 - INFO - Epoch 06 | Loss: 0.0637 | Val Acc: 0.8799 | Val Macro-F1: 0.8751 | LR: 2.000000e-04
+2026-04-18 17:44:41,485 - INFO -   [NoPackage         ] P: 1.0000 | R: 0.8167 | F1: 0.8991 | N: 60
+2026-04-18 17:44:41,485 - INFO -   [NoWaybill         ] P: 0.8947 | R: 0.9107 | F1: 0.9027 | N: 112
+2026-04-18 17:44:41,485 - INFO -   [TruncatedBarcode  ] P: 0.8448 | R: 0.8033 | F1: 0.8235 | N: 61
+2026-04-18 17:44:41,485 - INFO -   [WrinkledWaybill   ] P: 0.7903 | R: 0.9800 | F1: 0.8750 | N: 50
+2026-04-18 17:44:41,485 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           49              4               4               3               
+NoWaybill           0               102             4               6               
+TruncatedBarcode    0               8               49              4               
+WrinkledWaybill     0               0               1               49              
+2026-04-18 17:44:41,860 - INFO - [F1 Improved] Saved to checkpoints/checkpoints_resnet34_v6_round_2/best_f1_model.pth
+2026-04-18 17:44:42,294 - INFO - [Acc Improved] Saved to checkpoints/checkpoints_resnet34_v6_round_2/best_acc_model.pth
+2026-04-18 17:44:42,658 - INFO - Best Classification Report:
+                  precision    recall  f1-score   support
+
+       NoPackage       1.00      0.82      0.90        60
+       NoWaybill       0.89      0.91      0.90       112
+TruncatedBarcode       0.84      0.80      0.82        61
+ WrinkledWaybill       0.79      0.98      0.88        50
+
+        accuracy                           0.88       283
+       macro avg       0.88      0.88      0.88       283
+    weighted avg       0.89      0.88      0.88       283
+
+2026-04-18 17:48:43,154 - INFO - Epoch 07 | Loss: 0.0379 | Val Acc: 0.8481 | Val Macro-F1: 0.8414 | LR: 2.000000e-04
+2026-04-18 17:48:43,155 - INFO -   [NoPackage         ] P: 1.0000 | R: 0.8500 | F1: 0.9189 | N: 60
+2026-04-18 17:48:43,155 - INFO -   [NoWaybill         ] P: 0.9314 | R: 0.8482 | F1: 0.8879 | N: 112
+2026-04-18 17:48:43,155 - INFO -   [TruncatedBarcode  ] P: 0.7719 | R: 0.7213 | F1: 0.7458 | N: 61
+2026-04-18 17:48:43,155 - INFO -   [WrinkledWaybill   ] P: 0.6849 | R: 1.0000 | F1: 0.8130 | N: 50
+2026-04-18 17:48:43,155 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           51              2               3               4               
+NoWaybill           0               95              10              7               
+TruncatedBarcode    0               5               44              12              
+WrinkledWaybill     0               0               0               50              
+2026-04-18 17:52:43,797 - INFO - Epoch 08 | Loss: 0.0543 | Val Acc: 0.8940 | Val Macro-F1: 0.8786 | LR: 2.000000e-04
+2026-04-18 17:52:43,798 - INFO -   [NoPackage         ] P: 0.9016 | R: 0.9167 | F1: 0.9091 | N: 60
+2026-04-18 17:52:43,798 - INFO -   [NoWaybill         ] P: 0.9310 | R: 0.9643 | F1: 0.9474 | N: 112
+2026-04-18 17:52:43,798 - INFO -   [TruncatedBarcode  ] P: 0.9130 | R: 0.6885 | F1: 0.7850 | N: 61
+2026-04-18 17:52:43,798 - INFO -   [WrinkledWaybill   ] P: 0.8000 | R: 0.9600 | F1: 0.8727 | N: 50
+2026-04-18 17:52:43,798 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           55              1               1               3               
+NoWaybill           1               108             2               1               
+TruncatedBarcode    5               6               42              8               
+WrinkledWaybill     0               1               1               48              
+2026-04-18 17:52:44,181 - INFO - [F1 Improved] Saved to checkpoints/checkpoints_resnet34_v6_round_2/best_f1_model.pth
+2026-04-18 17:52:44,695 - INFO - [Acc Improved] Saved to checkpoints/checkpoints_resnet34_v6_round_2/best_acc_model.pth
+2026-04-18 17:52:45,176 - INFO - Best Classification Report:
+                  precision    recall  f1-score   support
+
+       NoPackage       0.90      0.92      0.91        60
+       NoWaybill       0.93      0.96      0.95       112
+TruncatedBarcode       0.91      0.69      0.79        61
+ WrinkledWaybill       0.80      0.96      0.87        50
+
+        accuracy                           0.89       283
+       macro avg       0.89      0.88      0.88       283
+    weighted avg       0.90      0.89      0.89       283
+
+2026-04-18 17:56:37,357 - INFO - Epoch 09 | Loss: 0.0391 | Val Acc: 0.8940 | Val Macro-F1: 0.8918 | LR: 2.000000e-04
+2026-04-18 17:56:37,357 - INFO -   [NoPackage         ] P: 1.0000 | R: 0.7833 | F1: 0.8785 | N: 60
+2026-04-18 17:56:37,357 - INFO -   [NoWaybill         ] P: 0.8629 | R: 0.9554 | F1: 0.9068 | N: 112
+2026-04-18 17:56:37,357 - INFO -   [TruncatedBarcode  ] P: 0.8548 | R: 0.8689 | F1: 0.8618 | N: 61
+2026-04-18 17:56:37,357 - INFO -   [WrinkledWaybill   ] P: 0.9200 | R: 0.9200 | F1: 0.9200 | N: 50
+2026-04-18 17:56:37,357 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           47              8               4               1               
+NoWaybill           0               107             3               2               
+TruncatedBarcode    0               7               53              1               
+WrinkledWaybill     0               2               2               46              
+2026-04-18 17:56:37,727 - INFO - [F1 Improved] Saved to checkpoints/checkpoints_resnet34_v6_round_2/best_f1_model.pth
+2026-04-18 17:56:38,111 - INFO - Best Classification Report:
+                  precision    recall  f1-score   support
+
+       NoPackage       1.00      0.78      0.88        60
+       NoWaybill       0.86      0.96      0.91       112
+TruncatedBarcode       0.85      0.87      0.86        61
+ WrinkledWaybill       0.92      0.92      0.92        50
+
+        accuracy                           0.89       283
+       macro avg       0.91      0.88      0.89       283
+    weighted avg       0.90      0.89      0.89       283
+
+2026-04-18 18:00:38,765 - INFO - Epoch 10 | Loss: 0.0276 | Val Acc: 0.8975 | Val Macro-F1: 0.8910 | LR: 2.000000e-04
+2026-04-18 18:00:38,765 - INFO -   [NoPackage         ] P: 0.9808 | R: 0.8500 | F1: 0.9107 | N: 60
+2026-04-18 18:00:38,765 - INFO -   [NoWaybill         ] P: 0.9060 | R: 0.9464 | F1: 0.9258 | N: 112
+2026-04-18 18:00:38,765 - INFO -   [TruncatedBarcode  ] P: 0.8500 | R: 0.8361 | F1: 0.8430 | N: 61
+2026-04-18 18:00:38,765 - INFO -   [WrinkledWaybill   ] P: 0.8519 | R: 0.9200 | F1: 0.8846 | N: 50
+2026-04-18 18:00:38,766 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           51              4               3               2               
+NoWaybill           0               106             3               3               
+TruncatedBarcode    1               6               51              3               
+WrinkledWaybill     0               1               3               46              
+2026-04-18 18:00:39,349 - INFO - [Acc Improved] Saved to checkpoints/checkpoints_resnet34_v6_round_2/best_acc_model.pth
+2026-04-18 18:00:39,900 - INFO - [Periodic Save] latest checkpoint updated at epoch 10
+2026-04-18 18:04:32,244 - INFO - Epoch 11 | Loss: 0.0362 | Val Acc: 0.8799 | Val Macro-F1: 0.8726 | LR: 2.000000e-04
+2026-04-18 18:04:32,244 - INFO -   [NoPackage         ] P: 1.0000 | R: 0.7167 | F1: 0.8350 | N: 60
+2026-04-18 18:04:32,244 - INFO -   [NoWaybill         ] P: 0.8710 | R: 0.9643 | F1: 0.9153 | N: 112
+2026-04-18 18:04:32,244 - INFO -   [TruncatedBarcode  ] P: 0.7846 | R: 0.8361 | F1: 0.8095 | N: 61
+2026-04-18 18:04:32,244 - INFO -   [WrinkledWaybill   ] P: 0.9216 | R: 0.9400 | F1: 0.9307 | N: 50
+2026-04-18 18:04:32,244 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           43              7               8               2               
+NoWaybill           0               108             4               0               
+TruncatedBarcode    0               8               51              2               
+WrinkledWaybill     0               1               2               47              
+2026-04-18 18:08:22,934 - INFO - Epoch 12 | Loss: 0.0366 | Val Acc: 0.8728 | Val Macro-F1: 0.8649 | LR: 2.000000e-04
+2026-04-18 18:08:22,934 - INFO -   [NoPackage         ] P: 0.9091 | R: 0.8333 | F1: 0.8696 | N: 60
+2026-04-18 18:08:22,934 - INFO -   [NoWaybill         ] P: 0.8814 | R: 0.9286 | F1: 0.9043 | N: 112
+2026-04-18 18:08:22,934 - INFO -   [TruncatedBarcode  ] P: 0.8679 | R: 0.7541 | F1: 0.8070 | N: 61
+2026-04-18 18:08:22,934 - INFO -   [WrinkledWaybill   ] P: 0.8246 | R: 0.9400 | F1: 0.8785 | N: 50
+2026-04-18 18:08:22,935 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           50              4               3               3               
+NoWaybill           0               104             3               5               
+TruncatedBarcode    5               8               46              2               
+WrinkledWaybill     0               2               1               47              
+2026-04-18 18:12:15,641 - INFO - Epoch 13 | Loss: 0.0250 | Val Acc: 0.8869 | Val Macro-F1: 0.8826 | LR: 2.000000e-04
+2026-04-18 18:12:15,641 - INFO -   [NoPackage         ] P: 0.8235 | R: 0.9333 | F1: 0.8750 | N: 60
+2026-04-18 18:12:15,641 - INFO -   [NoWaybill         ] P: 0.9107 | R: 0.9107 | F1: 0.9107 | N: 112
+2026-04-18 18:12:15,641 - INFO -   [TruncatedBarcode  ] P: 0.8824 | R: 0.7377 | F1: 0.8036 | N: 61
+2026-04-18 18:12:15,641 - INFO -   [WrinkledWaybill   ] P: 0.9231 | R: 0.9600 | F1: 0.9412 | N: 50
+2026-04-18 18:12:15,641 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           56              1               2               1               
+NoWaybill           6               102             3               1               
+TruncatedBarcode    6               8               45              2               
+WrinkledWaybill     0               1               1               48              
+2026-04-18 18:16:09,795 - INFO - [LR Reduced] 2.000000e-04 -> 1.000000e-04
+2026-04-18 18:16:09,795 - INFO - Epoch 14 | Loss: 0.0435 | Val Acc: 0.8834 | Val Macro-F1: 0.8812 | LR: 1.000000e-04
+2026-04-18 18:16:09,795 - INFO -   [NoPackage         ] P: 0.9333 | R: 0.9333 | F1: 0.9333 | N: 60
+2026-04-18 18:16:09,795 - INFO -   [NoWaybill         ] P: 0.9327 | R: 0.8661 | F1: 0.8981 | N: 112
+2026-04-18 18:16:09,795 - INFO -   [TruncatedBarcode  ] P: 0.7937 | R: 0.8197 | F1: 0.8065 | N: 61
+2026-04-18 18:16:09,795 - INFO -   [WrinkledWaybill   ] P: 0.8393 | R: 0.9400 | F1: 0.8868 | N: 50
+2026-04-18 18:16:09,795 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           56              1               2               1               
+NoWaybill           1               97              8               6               
+TruncatedBarcode    3               6               50              2               
+WrinkledWaybill     0               0               3               47              
+2026-04-18 18:20:01,250 - INFO - Epoch 15 | Loss: 0.0105 | Val Acc: 0.8622 | Val Macro-F1: 0.8637 | LR: 1.000000e-04
+2026-04-18 18:20:01,250 - INFO -   [NoPackage         ] P: 1.0000 | R: 0.8000 | F1: 0.8889 | N: 60
+2026-04-18 18:20:01,250 - INFO -   [NoWaybill         ] P: 0.8972 | R: 0.8571 | F1: 0.8767 | N: 112
+2026-04-18 18:20:01,250 - INFO -   [TruncatedBarcode  ] P: 0.7162 | R: 0.8689 | F1: 0.7852 | N: 61
+2026-04-18 18:20:01,250 - INFO -   [WrinkledWaybill   ] P: 0.8704 | R: 0.9400 | F1: 0.9038 | N: 50
+2026-04-18 18:20:01,250 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           48              3               8               1               
+NoWaybill           0               96              11              5               
+TruncatedBarcode    0               7               53              1               
+WrinkledWaybill     0               1               2               47              
+2026-04-18 18:20:01,738 - INFO - [Periodic Save] latest checkpoint updated at epoch 15
+2026-04-18 18:23:54,464 - INFO - Epoch 16 | Loss: 0.0078 | Val Acc: 0.8869 | Val Macro-F1: 0.8829 | LR: 1.000000e-04
+2026-04-18 18:23:54,464 - INFO -   [NoPackage         ] P: 1.0000 | R: 0.8500 | F1: 0.9189 | N: 60
+2026-04-18 18:23:54,465 - INFO -   [NoWaybill         ] P: 0.9107 | R: 0.9107 | F1: 0.9107 | N: 112
+2026-04-18 18:23:54,465 - INFO -   [TruncatedBarcode  ] P: 0.7826 | R: 0.8852 | F1: 0.8308 | N: 61
+2026-04-18 18:23:54,465 - INFO -   [WrinkledWaybill   ] P: 0.8627 | R: 0.8800 | F1: 0.8713 | N: 50
+2026-04-18 18:23:54,465 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           51              3               4               2               
+NoWaybill           0               102             6               4               
+TruncatedBarcode    0               6               54              1               
+WrinkledWaybill     0               1               5               44              
+2026-04-18 18:28:01,666 - INFO - Epoch 17 | Loss: 0.0068 | Val Acc: 0.8834 | Val Macro-F1: 0.8821 | LR: 1.000000e-04
+2026-04-18 18:28:01,666 - INFO -   [NoPackage         ] P: 0.9800 | R: 0.8167 | F1: 0.8909 | N: 60
+2026-04-18 18:28:01,666 - INFO -   [NoWaybill         ] P: 0.8938 | R: 0.9018 | F1: 0.8978 | N: 112
+2026-04-18 18:28:01,666 - INFO -   [TruncatedBarcode  ] P: 0.8000 | R: 0.8525 | F1: 0.8254 | N: 61
+2026-04-18 18:28:01,666 - INFO -   [WrinkledWaybill   ] P: 0.8727 | R: 0.9600 | F1: 0.9143 | N: 50
+2026-04-18 18:28:01,666 - INFO - Confusion Matrix:
+GT\Pred             NoPackage       NoWaybill       TruncatedBarco  WrinkledWaybil  
+NoPackage           49              4               4               3               
+NoWaybill           0               101             8               3               
+TruncatedBarcode    1               7               52              1               
+WrinkledWaybill     0               1               1               48              
+2026-04-18 18:28:01,993 - INFO - Early stopping triggered: macro-F1 did not improve for 8 epochs.
+2026-04-18 18:28:01,993 - INFO - ============================================================
+2026-04-18 18:28:01,993 - INFO - Training finished. Best epoch: 9
+2026-04-18 18:28:01,993 - INFO - Best Macro-F1: 0.8918
+2026-04-18 18:28:01,993 - INFO - Best Acc: 0.8975
+2026-04-18 18:28:01,993 - INFO - ============================================================
+2026-04-18 18:28:06,824 - INFO - [Hard Val] Acc: 0.1000 | Macro-F1: 0.2500
+2026-04-18 18:28:06,824 - INFO -   [Hard NoPackage    ] P: 0.0000 | R: 0.0000 | F1: 0.0000 | N: 1
+2026-04-18 18:28:06,824 - INFO -   [Hard NoWaybill    ] P: 0.0000 | R: 0.0000 | F1: 0.0000 | N: 2
+2026-04-18 18:28:06,824 - INFO -   [Hard TruncatedBarcode] P: 0.0000 | R: 0.0000 | F1: 0.0000 | N: 6
+2026-04-18 18:28:06,824 - INFO -   [Hard WrinkledWaybill] P: 1.0000 | R: 1.0000 | F1: 1.0000 | N: 1

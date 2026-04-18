@@ -20,7 +20,7 @@ from tqdm import tqdm
 # =========================================================
 class Config:
     DATA_DIR = Path("/mnt/ramdisk/dataset_9_class")
-    CHECKPOINT_DIR = Path("./checkpoints/checkpoints_resnet34_v6")
+    CHECKPOINT_DIR = Path("./checkpoints/checkpoints_resnet34_v6_round_3")
     LOG_FILE = CHECKPOINT_DIR / "train.log"
 
     # 注意：这里顺序要和你真正训练时保持一致
@@ -32,20 +32,28 @@ class Config:
     ]
 
     # 保持原始比例：4352 x 5440 ≈ 4 : 5
-    INPUT_H = 448
-    INPUT_W = 560
+    # try 560 x 700 next time (lr to 1e-4, batch to 16?)
+    # we chose 448 x 560 for round 1 and 2
+    INPUT_H = 560
+    INPUT_W = 700   
 
-    BATCH_SIZE = 32
+    # we have chosen batch 32, lr 2e-4 for round 2
+    BATCH_SIZE = 16
     EPOCHS = 30
-    LR = 2e-4
+    LR = 1e-4
     WEIGHT_DECAY = 5e-4
-    NUM_WORKERS = min(24, max(2, (os.cpu_count() or 8) - 2))
+
+    # too many pd_data_workers!
+    # NUM_WORKERS = min(24, max(2, (os.cpu_count() or 8) - 4))
+    TRAIN_NUM_WORKERS = 12
+    VAL_NUM_WORKERS = 4
+    PREFETCH_FACTOR = 2
 
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     AMP = torch.cuda.is_available()
     SEED = 42
 
-    EARLY_STOPPING_PATIENCE = 8
+    EARLY_STOPPING_PATIENCE = 8     # we have chose 6 in round 1
     SAVE_EVERY = 5
 
     # 左下角缩略图区域 mask 比例，按你图像大致布局设置
@@ -196,6 +204,13 @@ def build_dataloaders(cfg: Config, logger):
     train_set = filter_imagefolder_by_classnames(train_set, cfg.TARGET_CLASSES)
     val_set = filter_imagefolder_by_classnames(val_set, cfg.TARGET_CLASSES)
 
+    hard_val_set = None
+    hard_val_loader = None
+    hard_val_dir = cfg.DATA_DIR / "hard_val"
+    if hard_val_dir.exists():
+        hard_val_set = datasets.ImageFolder(hard_val_dir, transform=val_tf)
+        hard_val_set = filter_imagefolder_by_classnames(hard_val_set, cfg.TARGET_CLASSES)
+
     logger.info(f"训练类别: {train_set.classes}")
 
     train_counter = Counter(train_set.targets)
@@ -208,6 +223,12 @@ def build_dataloaders(cfg: Config, logger):
     logger.info("Val class distribution:")
     for idx, cls_name in enumerate(val_set.classes):
         logger.info(f"  - {cls_name:<20}: {val_counter[idx]}")
+
+    if hard_val_set is not None:
+        hard_counter = Counter(hard_val_set.targets)
+        logger.info("Hard Val class distribution:")
+        for idx, cls_name in enumerate(hard_val_set.classes):
+            logger.info(f"  - {cls_name:<20}: {hard_counter[idx]}")
 
     # WeightedRandomSampler
     targets = np.array(train_set.targets)
@@ -226,21 +247,34 @@ def build_dataloaders(cfg: Config, logger):
         batch_size=cfg.BATCH_SIZE,
         sampler=sampler,
         shuffle=False,
-        num_workers=cfg.NUM_WORKERS,
+        num_workers=cfg.TRAIN_NUM_WORKERS,
         pin_memory=True,
-        persistent_workers=(cfg.NUM_WORKERS > 0),
+        persistent_workers=(cfg.TRAIN_NUM_WORKERS > 0),
+        prefetch_factor=cfg.PREFETCH_FACTOR if cfg.TRAIN_NUM_WORKERS > 0 else None,
     )
 
     val_loader = DataLoader(
         val_set,
         batch_size=cfg.BATCH_SIZE,
         shuffle=False,
-        num_workers=cfg.NUM_WORKERS,
+        num_workers=cfg.VAL_NUM_WORKERS,
         pin_memory=True,
-        persistent_workers=(cfg.NUM_WORKERS > 0),
+        persistent_workers=(cfg.VAL_NUM_WORKERS > 0),
+        prefetch_factor=cfg.PREFETCH_FACTOR if cfg.VAL_NUM_WORKERS > 0 else None,
     )
 
-    return train_loader, val_loader, train_set
+    if hard_val_set is not None:
+        hard_val_loader = DataLoader(
+            hard_val_set,
+            batch_size=cfg.BATCH_SIZE,
+            shuffle=False,
+            num_workers=cfg.VAL_NUM_WORKERS,
+            pin_memory=True,
+            persistent_workers=(cfg.VAL_NUM_WORKERS > 0),
+            prefetch_factor=cfg.PREFETCH_FACTOR if cfg.VAL_NUM_WORKERS > 0 else None,
+        )
+
+    return train_loader, val_loader, hard_val_loader, train_set
 
 
 # =========================================================
@@ -272,11 +306,12 @@ def build_model(num_classes: int):
 # 6. Trainer
 # =========================================================
 class Trainer:
-    def __init__(self, cfg: Config, logger, train_loader, val_loader, class_names):
+    def __init__(self, cfg, logger, train_loader, val_loader, hard_val_loader, class_names):
         self.cfg = cfg
         self.logger = logger
         self.train_loader = train_loader
         self.val_loader = val_loader
+        self.hard_val_loader = hard_val_loader
         self.class_names = class_names
 
         self.model = build_model(len(class_names)).to(cfg.DEVICE)
@@ -290,7 +325,7 @@ class Trainer:
             self.optimizer,
             mode="max",
             factor=0.5,
-            patience=3 # try 4 maybe?
+            patience=4 # we used 3 in round 1
         )
         self.scaler = torch.amp.GradScaler("cuda", enabled=cfg.AMP)
 
@@ -358,6 +393,30 @@ class Trainer:
         }
         torch.save(ckpt, path)
 
+    @torch.no_grad()
+    def evaluate_loader(self, loader):
+        self.model.eval()
+        all_preds, all_labels = [], []
+
+        for images, labels in loader:
+            images = images.to(self.cfg.DEVICE, non_blocking=True)
+            outputs = self.model(images)
+            preds = torch.argmax(outputs, dim=1)
+
+            all_preds.extend(preds.cpu().numpy().tolist())
+            all_labels.extend(labels.numpy().tolist())
+
+        all_preds = np.array(all_preds)
+        all_labels = np.array(all_labels)
+
+        acc = (all_preds == all_labels).mean().item()
+        macro_f1 = f1_score(all_labels, all_preds, average="macro", zero_division=0)
+        report_text = classification_report(all_labels, all_preds, target_names=self.class_names, zero_division=0)
+        report_dict = classification_report(all_labels, all_preds, target_names=self.class_names, zero_division=0, output_dict=True)
+        cm = confusion_matrix(all_labels, all_preds)
+
+        return acc, macro_f1, report_text, report_dict, cm
+
     def run(self):
         self.cfg.CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
         self.logger.info(f"Training on device: {self.cfg.DEVICE}")
@@ -367,7 +426,7 @@ class Trainer:
 
         for epoch in range(self.cfg.EPOCHS):
             train_loss = self.train_one_epoch(epoch)
-            val_acc, val_macro_f1, report_text, report_dict, cm = self.evaluate()
+            val_acc, val_macro_f1, report_text, report_dict, cm = self.evaluate_loader(self.val_loader)
 
             old_lr = self.optimizer.param_groups[0]["lr"]
             self.scheduler.step(val_macro_f1)
@@ -429,19 +488,35 @@ class Trainer:
         self.logger.info(f"Best Acc: {self.best_acc:.4f}")
         self.logger.info("=" * 60)
 
+        if self.hard_val_loader is not None:
+            hard_acc, hard_macro_f1, hard_report_text, hard_report_dict, hard_cm = self.evaluate_loader(self.hard_val_loader)
+
+            self.logger.info(
+                f"[Hard Val] Acc: {hard_acc:.4f} | Macro-F1: {hard_macro_f1:.4f}"
+            )
+
+            for cls_name in self.class_names:
+                item = hard_report_dict[cls_name]
+                self.logger.info(
+                    f"  [Hard {cls_name:<13}] P: {item['precision']:.4f} | "
+                    f"R: {item['recall']:.4f} | F1: {item['f1-score']:.4f} | "
+                    f"N: {int(item['support'])}"
+                )
+
 
 def main():
     cfg = Config()
     set_seed(cfg.SEED)
     logger = build_logger(cfg.LOG_FILE)
 
-    train_loader, val_loader, train_set = build_dataloaders(cfg, logger)
+    train_loader, val_loader, hard_val_loader, train_set = build_dataloaders(cfg, logger)
 
     trainer = Trainer(
         cfg=cfg,
         logger=logger,
         train_loader=train_loader,
         val_loader=val_loader,
+        hard_val_loader=hard_val_loader,
         class_names=train_set.classes
     )
     trainer.run()
