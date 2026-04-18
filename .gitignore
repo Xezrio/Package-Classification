@@ -19,10 +19,8 @@ myenv/
 *.pt
 # 忽略整个 checkpoints
 # checkpoints/*
-# 但保留某个子目录
-!checkpoints/checkpoints_resnet34_v6/
-# 允许该子目录中的内容
-!checkpoints/checkpoints_resnet34_v6/**
+!checkpoints/checkpoints_resnet34_v6/best_f1_model.pth
+!checkpoints/checkpoints_resnet34_v6_round_3/best_f1_model.pth
 
 # system files
 .DS_Store
