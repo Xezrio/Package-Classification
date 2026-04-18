@@ -43,7 +43,17 @@ InsufficientLighting
 BlurryFocus
 
 
+2026-04-18 21:11:21,480 - INFO - Best Classification Report:
+                  precision    recall  f1-score   support
 
+       NoPackage       1.00      0.88      0.94        60
+       NoWaybill       0.91      0.98      0.94       112
+TruncatedBarcode       0.89      0.84      0.86        61
+ WrinkledWaybill       0.90      0.94      0.92        50
+
+        accuracy                           0.92       283
+       macro avg       0.93      0.91      0.92       283
+    weighted avg       0.92      0.92      0.92       283
 
 **NR类型**
 
