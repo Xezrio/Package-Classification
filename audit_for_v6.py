@@ -19,8 +19,8 @@ from torchvision import datasets, transforms, models
 # =========================================================
 class Config:
     DATA_DIR = Path("/mnt/ramdisk/dataset_9_class")
-    MODEL_PATH = Path("./checkpoints/checkpoints_resnet34_v6/best_f1_model.pth")
-    OUTPUT_DIR = Path("./dataset/audit_for_v6")
+    MODEL_PATH = Path("./checkpoints/checkpoints_resnet34_v6_round_3/best_f1_model.pth")
+    OUTPUT_DIR = Path("./dataset/audit_for_v6_round_3_deep")
 
     TARGET_CLASSES = [
         "NoPackage",
@@ -29,11 +29,11 @@ class Config:
         "WrinkledWaybill",
     ]
 
-    INPUT_H = 448
-    INPUT_W = 560
+    INPUT_H = 560
+    INPUT_W = 700
 
-    BATCH_SIZE = 32
-    NUM_WORKERS = min(32, max(2, (os.cpu_count() or 8) - 2))
+    BATCH_SIZE = 16
+    NUM_WORKERS = min(8, max(2, (os.cpu_count() or 8) - 2))
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     MASK_THUMBNAIL = True
@@ -281,24 +281,80 @@ def export_reports(df: pd.DataFrame, cfg: Config):
             (df["pred_label"] == pred_label)
         ].sort_values(by=["max_conf", "loss"], ascending=[False, False])
 
-    pairs = {
-        "confusion_truncated_to_nowaybill": pair_df("TruncatedBarcode", "NoWaybill"),
-        "confusion_nowaybill_to_truncated": pair_df("NoWaybill", "TruncatedBarcode"),
-        "confusion_truncated_to_wrinkled": pair_df("TruncatedBarcode", "WrinkledWaybill"),
-        "confusion_wrinkled_to_truncated": pair_df("WrinkledWaybill", "TruncatedBarcode"),
-        "confusion_nopackage_to_nowaybill": pair_df("NoPackage", "NoWaybill"),
-        "confusion_nopackage_to_truncated": pair_df("NoPackage", "TruncatedBarcode"),
-    }
+    # 自动生成全部 12 种有向混淆
+    pairs = {}
+    for true_label in cfg.TARGET_CLASSES:
+        for pred_label in cfg.TARGET_CLASSES:
+            if true_label == pred_label:
+                continue
+            key = f"confusion_{true_label.lower()}_to_{pred_label.lower()}"
+            pairs[key] = pair_df(true_label, pred_label)
 
     for name, subdf in pairs.items():
         save_csv(subdf, out / f"{name}.csv")
 
+    # 每个真实类别内部的错样本
     for cls_name in cfg.TARGET_CLASSES:
         sub = df[
             (df["true_label"] == cls_name) &
             (df["is_wrong"] == 1)
         ].sort_values(by=["loss", "max_conf"], ascending=[False, False])
         save_csv(sub, out / f"wrong_from_{cls_name}.csv")
+
+    # ========= 你现在最需要的定向导出 =========
+
+    # 1) TruncatedBarcode 中最像 NoPackage 的样本
+    tb_like_nopackage = df[
+        df["true_label"] == "TruncatedBarcode"
+    ].sort_values(by=["prob_NoPackage", "loss"], ascending=[False, False])
+    save_csv(tb_like_nopackage.head(200), out / "truncatedbarcode_most_like_nopackage.csv")
+
+    # 2) TruncatedBarcode 中高 loss 样本
+    tb_high_loss = df[
+        df["true_label"] == "TruncatedBarcode"
+    ].sort_values(by="loss", ascending=False)
+    save_csv(tb_high_loss.head(200), out / "truncatedbarcode_high_loss.csv")
+
+    # 3) TruncatedBarcode 中最像 NoWaybill 的样本
+    tb_like_nowaybill = df[
+        df["true_label"] == "TruncatedBarcode"
+    ].sort_values(by=["prob_NoWaybill", "loss"], ascending=[False, False])
+    save_csv(tb_like_nowaybill.head(200), out / "truncatedbarcode_most_like_nowaybill.csv")
+
+    # 4) NoWaybill 中最像 TruncatedBarcode 的样本
+    nw_like_truncated = df[
+        df["true_label"] == "NoWaybill"
+    ].sort_values(by=["prob_TruncatedBarcode", "loss"], ascending=[False, False])
+    save_csv(nw_like_truncated.head(200), out / "nowaybill_most_like_truncatedbarcode.csv")
+
+    # 5) 直接导出最关键的双向混淆（如果有的话）
+    tb_to_nw = pair_df("TruncatedBarcode", "NoWaybill")
+    nw_to_tb = pair_df("NoWaybill", "TruncatedBarcode")
+    save_csv(tb_to_nw, out / "focus_truncatedbarcode_to_nowaybill.csv")
+    save_csv(nw_to_tb, out / "focus_nowaybill_to_truncatedbarcode.csv")
+
+    # 6) TruncatedBarcode 中低置信度样本
+    tb_low_conf = df[
+        df["true_label"] == "TruncatedBarcode"
+    ].sort_values(by="max_conf", ascending=True)
+    save_csv(tb_low_conf.head(200), out / "truncatedbarcode_low_conf.csv")
+
+    # 7) NoWaybill 中低置信度样本
+    nw_low_conf = df[
+        df["true_label"] == "NoWaybill"
+    ].sort_values(by="max_conf", ascending=True)
+    save_csv(nw_low_conf.head(200), out / "nowaybill_low_conf.csv")
+
+    # 混淆对汇总表（按数量排序）
+    pair_summary_rows = []
+    for name, subdf in pairs.items():
+        pair_summary_rows.append({
+            "pair_name": name,
+            "count": int(len(subdf))
+        })
+
+    pair_summary_df = pd.DataFrame(pair_summary_rows).sort_values(by="count", ascending=False)
+    save_csv(pair_summary_df, out / "pair_summary.csv")
 
     summary = {
         "num_samples": int(len(df)),
@@ -307,6 +363,10 @@ def export_reports(df: pd.DataFrame, cfg: Config):
         "high_conf_wrong_count": int(len(high_conf_wrong)),
         "low_conf_count": int(len(low_conf)),
         "pair_counts": {k: int(len(v)) for k, v in pairs.items()},
+        "focus_counts": {
+            "truncatedbarcode_to_nowaybill": int(len(tb_to_nw)),
+            "nowaybill_to_truncatedbarcode": int(len(nw_to_tb)),
+        }
     }
     with open(out / "summary.json", "w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
@@ -316,44 +376,53 @@ def export_reports(df: pd.DataFrame, cfg: Config):
 
         copy_rows_to_dir(
             high_conf_wrong,
-            copy_base / "01_high_conf_wrong",
+            copy_base / "00_high_conf_wrong",
             cfg.COPY_LIMIT_PER_GROUP
         )
         copy_rows_to_dir(
             high_loss,
-            copy_base / "02_high_loss",
+            copy_base / "01_high_loss",
             cfg.COPY_LIMIT_PER_GROUP
         )
         copy_rows_to_dir(
-            pairs["confusion_truncated_to_nowaybill"],
-            copy_base / "03_truncated_to_nowaybill",
+            low_conf,
+            copy_base / "02_low_conf",
+            cfg.COPY_LIMIT_PER_GROUP
+        )
+
+        # 重点人工审查目录
+        copy_rows_to_dir(
+            tb_to_nw,
+            copy_base / "03_focus_truncatedbarcode_to_nowaybill",
             cfg.COPY_LIMIT_PER_GROUP
         )
         copy_rows_to_dir(
-            pairs["confusion_nowaybill_to_truncated"],
-            copy_base / "04_nowaybill_to_truncated",
+            nw_to_tb,
+            copy_base / "04_focus_nowaybill_to_truncatedbarcode",
             cfg.COPY_LIMIT_PER_GROUP
         )
         copy_rows_to_dir(
-            pairs["confusion_truncated_to_wrinkled"],
-            copy_base / "05_truncated_to_wrinkled",
+            tb_like_nopackage,
+            copy_base / "05_truncatedbarcode_most_like_nopackage",
             cfg.COPY_LIMIT_PER_GROUP
         )
         copy_rows_to_dir(
-            pairs["confusion_wrinkled_to_truncated"],
-            copy_base / "06_wrinkled_to_truncated",
+            tb_like_nowaybill,
+            copy_base / "06_truncatedbarcode_most_like_nowaybill",
             cfg.COPY_LIMIT_PER_GROUP
         )
         copy_rows_to_dir(
-            pairs["confusion_nopackage_to_nowaybill"],
-            copy_base / "07_nopackage_to_nowaybill",
+            nw_like_truncated,
+            copy_base / "07_nowaybill_most_like_truncatedbarcode",
             cfg.COPY_LIMIT_PER_GROUP
         )
-        copy_rows_to_dir(
-            pairs["confusion_nopackage_to_truncated"],
-            copy_base / "08_nopackage_to_truncated",
-            cfg.COPY_LIMIT_PER_GROUP
-        )
+
+        for idx, (name, subdf) in enumerate(sorted(pairs.items()), start=8):
+            copy_rows_to_dir(
+                subdf,
+                copy_base / f"{idx:02d}_{name}",
+                cfg.COPY_LIMIT_PER_GROUP
+            )
 
     return summary
 
