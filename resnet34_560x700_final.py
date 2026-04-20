@@ -16,14 +16,15 @@ from tqdm import tqdm
 
 
 # =========================================================
-# 1. 配置
+# 配置
 # =========================================================
 class Config:
+    # 注意训练前改路径，防止覆盖上次结果
     DATA_DIR = Path("/mnt/ramdisk/dataset_9_class")
     CHECKPOINT_DIR = Path("./checkpoints/checkpoints_resnet34_v6_round_final")
     LOG_FILE = CHECKPOINT_DIR / "train.log"
 
-    # 注意：这里顺序要和你真正训练时保持一致
+    # 这里顺序要和训练时保持一致（此处字典序）
     TARGET_CLASSES = [
         "NoPackage",
         "NoWaybill",
@@ -56,7 +57,8 @@ class Config:
     EARLY_STOPPING_PATIENCE = 8     # we have chose 6 in round 1
     SAVE_EVERY = 5
 
-    # 左下角缩略图区域 mask 比例，按你图像大致布局设置
+    # 屏蔽缩略图，防止无用噪声
+    # 左下角缩略图区域 mask 比例，按图像大致布局设置
     MASK_THUMBNAIL = True
     THUMB_H_RATIO = 0.17
     THUMB_W_RATIO = 0.42
@@ -67,7 +69,7 @@ class Config:
 
 
 # =========================================================
-# 2. 基础工具
+# 基础工具
 # =========================================================
 def set_seed(seed: int):
     random.seed(seed)
@@ -107,7 +109,7 @@ def format_confusion_matrix(cm, class_names):
 
 
 # =========================================================
-# 3. 自定义预处理
+# 自定义预处理
 # =========================================================
 class MaskBottomLeftThumbnail:
     def __init__(self, h_ratio=0.17, w_ratio=0.42, enabled=True):
@@ -121,7 +123,7 @@ class MaskBottomLeftThumbnail:
 
         arr = np.array(img)
         if arr.ndim == 3:
-            arr = arr[..., 0]  # 转成单通道处理
+            arr = arr[..., 0]  # 转成单通道处理，灰度图
 
         h, w = arr.shape[:2]
         mask_h = int(h * self.h_ratio)
@@ -139,7 +141,7 @@ class ToGray1:
 
 
 # =========================================================
-# 4. 数据集过滤
+# 数据集过滤（过滤极小类，保留四类）
 # =========================================================
 def filter_imagefolder_by_classnames(dataset: datasets.ImageFolder, target_classnames):
     old_class_to_idx = dataset.class_to_idx
@@ -230,6 +232,7 @@ def build_dataloaders(cfg: Config, logger):
         for idx, cls_name in enumerate(hard_val_set.classes):
             logger.info(f"  - {cls_name:<20}: {hard_counter[idx]}")
 
+    # 权重，用于处理训练集类别不平衡的问题
     # WeightedRandomSampler
     targets = np.array(train_set.targets)
     class_sample_count = np.array([np.sum(targets == t) for t in range(len(train_set.classes))], dtype=np.float32)
@@ -278,9 +281,10 @@ def build_dataloaders(cfg: Config, logger):
 
 
 # =========================================================
-# 5. 模型
+# 模型
 # =========================================================
 def build_model(num_classes: int):
+    # ResNet-34
     model = models.resnet34(weights=models.ResNet34_Weights.IMAGENET1K_V1)
 
     # 把第一层改成单通道，并用原 RGB 权重均值初始化
@@ -303,7 +307,7 @@ def build_model(num_classes: int):
 
 
 # =========================================================
-# 6. Trainer
+# Trainer
 # =========================================================
 class Trainer:
     def __init__(self, cfg, logger, train_loader, val_loader, hard_val_loader, class_names):
