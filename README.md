@@ -90,6 +90,29 @@ WrinkledWaybill      0           1           2                  47
 
 - 约 **12.0 GiB**
 
+### 图像：
+数据集采集于一物流公司的传送带，数据由三台工业相机采集，分别从三个不同角度（顶部、前方、后方）拍摄
+输出图像为灰度图，分辨率为 **5440 x 4352**
+
+## 相机视角
+
+### 后方相机
+![后方相机](samples/Camera_back.jpg)
+
+### 顶部与前方相机
+![顶部与前方相机](samples/Camera_top_and_front.jpg)
+
+## 数据示例
+
+### 前方
+![前方示例](samples/sample_front.png)
+
+### 后方
+![后方示例](samples/sample_back.png)
+
+### 顶部
+![顶部示例](samples/sample_top.png)
+
 ### `hard_val`
 
 用于保存少量极难样本，仅用于额外参考，不参与 best model 选择。
@@ -97,6 +120,8 @@ WrinkledWaybill      0           1           2                  47
 当前规模较小，因此结果仅作定性参考，不作为核心指标。
 
 ---
+
+## 类别定义
 
 ## 类别定义
 
@@ -111,9 +136,124 @@ WrinkledWaybill      0           1           2                  47
 - 零食
 - 杂物
 
+![NoPackage示例](samples/NoPackage.png)
+
+---
+
+### `NoWaybill`
+
+当前提是图中确实存在包裹主体，但包裹表面没有可见面单，或面单区域缺失、脱落、未贴附时，标为 `NoWaybill`。
+
+该类别的核心特征是：**有包裹，但没有可供识别的面单信息**。
+
+需要注意的是，若图中根本不是包裹，则应标为 `NoPackage`，而不是 `NoWaybill`。
+
+![NoWaybill示例](samples/NoWaybill.png)
+
+---
+
+### `WrinkledWaybill`
+
+当前提是图中存在包裹及其面单区域，但面单出现明显褶皱、折叠、起伏或局部遮挡，从而影响信息读取时，标为 `WrinkledWaybill`。
+
+该类别的核心在于：**面单存在明显形变**，例如：
+
+- 面单起皱
+- 面单折叠
+- 条码区域因褶皱发生局部扭曲
+- 面单表面不平整导致信息区域变形
+
+![WrinkledWaybill示例](samples/WrinkledWaybill.png)
+
+---
+
 ### `TruncatedBarcode`
 
-前提是图中确实存在包裹及其面单/条码区域，只是条码本身不完整或被截断。
+当前提是图中确实存在包裹及其面单/条码区域，只是条码本身不完整或被截断时，标为 `TruncatedBarcode`。
+
+该类别通常表现为：
+
+- 条码只显示一部分
+- 条码边界被裁掉
+- 条码区域缺失一截
+- 条码未完整出现在画面中
+
+需要注意的是，该类别前提是**条码原本存在，但显示不完整**，而不是完全没有面单。
+
+![TruncatedBarcode示例](samples/TruncatedBarcode.png)
+
+---
+
+### `None`
+
+当图像中的包裹与面单状态基本正常，不属于任何异常类别时，标为 `None`。
+
+该类别表示当前图像虽然可能来自识别流程中的样本，但从图像本身来看，不存在明显的面单缺失、条码截断、褶皱、反光、模糊或光照不足等问题。
+
+![None示例](samples/None.png)
+
+---
+
+### `BlurryWaybill`
+
+当前提是图中存在包裹及其面单区域，但面单本身内容模糊不清，导致文字、条码或关键信息难以辨认时，标为 `BlurryWaybill`。
+
+该类别更强调**面单区域本身的内容模糊**，例如：
+
+- 面单文字发虚
+- 条码边缘不清晰
+- 面单印刷区域整体糊成一片
+
+![BlurryWaybill示例](samples/BlurryWaybill.png)
+
+---
+
+### `Reflection`
+
+当前提是图中存在包裹及面单区域，但由于反光、高亮区域或镜面反射导致面单或条码信息被部分遮挡、淹没或难以识别时，标为 `Reflection`。
+
+例如：
+
+- 面单表面出现强反光
+- 条码区域被高亮覆盖
+- 局部过曝导致信息丢失
+
+该类别强调的是**由反光造成的信息干扰**，而不是模糊或低分辨率问题。
+
+![Reflection示例](samples/Reflection.png)
+
+---
+
+### `InsufficientLighting`
+
+当前提是图中存在包裹及面单区域，但由于整体光线不足、局部过暗或曝光不足，导致面单或条码区域难以辨认时，标为 `InsufficientLighting`。
+
+例如：
+
+- 图像整体偏暗
+- 面单区域亮度不足
+- 条码处于阴影中
+- 暗部细节严重丢失
+
+该类别强调的是**照明条件不足**，与 `Reflection` 的“过亮”问题相对。
+
+![InsufficientLighting示例](samples/InsufficientLighting.png)
+
+---
+
+### `BlurryFocus`
+
+当前提是图中存在包裹及面单区域，但由于拍摄失焦、运动模糊或整体清晰度不足，导致图像内容无法有效识别时，标为 `BlurryFocus`。
+
+该类别通常表现为：
+
+- 整张图像发虚
+- 包裹轮廓不清
+- 面单与背景都不清晰
+- 焦点落在错误位置，导致目标区域失焦
+
+![BlurryFocus示例](samples/BlurryFocus.png)
+
 
 ---
 
@@ -173,7 +313,7 @@ WrinkledWaybill      0           1           2                  47
     - Resize
     - Normalize
 
-### 为什么高分辨率有效
+### 高分辨率有效
 
 本任务高度依赖局部细节，例如：
 
@@ -202,7 +342,7 @@ rsync -av /mnt/F/xezrio/PackageClassification/dataset/dataset_9_class /mnt/ramdi
 
 ---
 
-## 常用命令
+## 常用命令（仅自用）
 
 ### 进入项目
 
