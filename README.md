@@ -382,7 +382,7 @@ du -h --max-depth=1
 
 ## Quick Start
 
-### 1.克隆项目并进入目录
+### 1. 克隆项目并进入目录
 
 ```sh
 git clone https://github.com/Xezrio/Package-Classification.git
@@ -423,12 +423,12 @@ dataset_9_class/
 
 当前最终版本训练脚本为：
 ```sh
-python3 resnet34_560x700_final.py
+resnet34_560x700_final.py
 ```
 
 使用审计脚本分析高loss样本、低置信样本与关键混淆对：
 ```sh
-python3 audit_dataset.py
+audit_for_v6.py
 ```
 
 
@@ -464,4 +464,4 @@ python3 audit_dataset.py
 改进方向：
 - 后续可以专门收集难例，做针对的`hard_val`训练，提高模型鲁棒性
 - 补充训练集小类样本，可逐步扩充为九类别分类模型
-- 采集更大规模、不同流水线传送带上的数据集，预计可显著增强模型在不同物流基地识别的泛化能力。
+- 采集更大规模、不同流水线传送带上的数据集，预计可显著增强模型在不同物流基地识别的泛化能力
