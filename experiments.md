@@ -347,6 +347,13 @@ TruncatedBarcode       0.90      0.85      0.87        61
 - 标签边界模糊
 - 单标签任务对多特征样本的天然限制
 
+### 10.4 任务背景与主要难点来源
+
+- 多特征共存但强制单标签（单个数据可以有多种错误，但是需求按照优先级只标注单标签）
+- 有自动扩标历史（训练集内含脏数据）
+- 极难样本（特征难以区分）
+- 图像巨大、目标不固定、缩略图干扰（包裹位置并不固定，而且图中可能出现多个包裹影响模型判断）
+
 ---
 
 ## 11. 结果解读注意事项
@@ -390,3 +397,47 @@ TruncatedBarcode       0.90      0.85      0.87        61
 
 ## 13. 极难样本
 
+可参考 samples/hard_samples。
+
+人工难以判断
+![alt text](samples/hard_samples/image-20260418141655666.png)
+
+与条码外形太接近
+![alt text](samples/hard_samples/image-20260418144140682.png)
+![alt text](samples/hard_samples/image-20260418145138519.png)
+
+容易把带文字的封条识别为面单
+![alt text](samples/hard_samples/image-20260418144250751.png)
+
+外形与条码非常接近，但不是快递扫描用的条码
+![alt text](samples/hard_samples/image-20260418144519881.png)
+![alt text](samples/hard_samples/image-20260418144836139.png)
+
+反光亮度高，容易被误判为条码
+![alt text](samples/hard_samples/image-20260418145006290.png)
+
+面单位于图像边缘或面单出现面积太小，缩小分辨率后输入特征难以保留
+![alt text](samples/hard_samples/image-20260418145353580.png)
+![alt text](samples/hard_samples/image-20260418145423706.png)
+![alt text](samples/hard_samples/image-20260418145530372.png)
+![alt text](samples/hard_samples/image-20260418145744695.png)
+本张甚至难以人工判别
+![alt text](samples/hard_samples/image-20260418145956443.png)
+
+包裹数量不止一个，而且被识别包裹并非位于图像中央
+![alt text](samples/hard_samples/image-20260418150729839.png)
+![alt text](samples/hard_samples/image-20260418151619857.png)
+
+多种特征共存，难以取舍
+条码截断 与 面单褶皱
+![alt text](samples/hard_samples/image-20260418151013079.png)
+
+非包裹外形类似面单
+![alt text](samples/hard_samples/image-20260418152439912.png)
+![alt text](samples/hard_samples/image-20260418152539521.png)
+
+
+### 后续改进方向
+
+- 后续可以专门收集难例，做针对的hard_val训练，提高模型鲁棒性；
+- 采集更大规模、不同流水线传送带上的数据集，可以大幅增强模型在不同物流基地的泛化能力。
