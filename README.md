@@ -380,6 +380,60 @@ du -h --max-depth=1
 
 ---
 
+## Quick Start
+
+### 1.克隆项目并进入目录
+
+```sh
+git clone https://github.com/Xezrio/Package-Classification.git
+cd Package-Classification
+```
+
+### 2. 创建并激活 Python 环境
+
+```sh
+python3 -m venv myenv
+source myenv/bin/activate
+pip install -r requirements.txt
+```
+
+### 3. 准备数据集
+
+将数据集整理为 ImageFolder 结构，例如：
+```sh
+dataset_9_class/
+├── train/
+│   ├── NoPackage/
+│   ├── NoWaybill/
+│   ├── TruncatedBarcode/
+│   └── WrinkledWaybill/
+├── val/
+│   ├── NoPackage/
+│   ├── NoWaybill/
+│   ├── TruncatedBarcode/
+│   └── WrinkledWaybill/
+└── hard_val/   # 可选，仅用于极难样本参考
+    ├── NoPackage/
+    ├── NoWaybill/
+    ├── TruncatedBarcode/
+    └── WrinkledWaybill/
+```
+
+### 4. 训练
+
+当前最终版本训练脚本为：
+```sh
+python3 resnet34_560x700_final.py
+```
+
+使用审计脚本分析高loss样本、低置信样本与关键混淆对：
+```sh
+python3 audit_dataset.py
+```
+
+
+---
+
 ## 结论
 
 本项目从一个初始 4 类 baseline 出发，经过多轮数据治理、验证集重构和模型优化，最终达到：
