@@ -351,6 +351,7 @@ TruncatedBarcode       0.90      0.85      0.87        61
 
 - 多特征共存但强制单标签（单个数据可以有多种错误，但是需求按照优先级只标注单标签）
 - 有自动扩标历史（训练集内含脏数据）
+- 数据集类别数据非常不均衡，最大类别数量可达最小类别数量约十倍
 - 极难样本（特征难以区分）
 - 图像巨大、目标不固定、缩略图干扰（包裹位置并不固定，而且图中可能出现多个包裹影响模型判断）
 
@@ -399,12 +400,13 @@ TruncatedBarcode       0.90      0.85      0.87        61
 
 可参考 samples/hard_samples。
 
-人工难以判断
-![alt text](samples/hard_samples/image-20260418141655666.png)
-
 与条码外形太接近
 ![alt text](samples/hard_samples/image-20260418144140682.png)
 ![alt text](samples/hard_samples/image-20260418145138519.png)
+
+人工难以判断
+无面单 / 无包裹？类别边界清晰不足
+![alt text](samples/hard_samples/image-20260418141655666.png)
 
 容易把带文字的封条识别为面单
 ![alt text](samples/hard_samples/image-20260418144250751.png)
@@ -437,7 +439,8 @@ TruncatedBarcode       0.90      0.85      0.87        61
 ![alt text](samples/hard_samples/image-20260418152539521.png)
 
 
-### 后续改进方向
+## 14. 后续改进方向
 
 - 后续可以专门收集难例，做针对的hard_val训练，提高模型鲁棒性；
+- 补充训练集小类样本，可逐步扩充为九类别分类模型
 - 采集更大规模、不同流水线传送带上的数据集，可以大幅增强模型在不同物流基地的泛化能力。
