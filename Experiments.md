@@ -400,18 +400,18 @@ TruncatedBarcode       0.90      0.85      0.87        61
 
 可参考 samples/hard_samples。
 
-与条码外形太接近
+与条码外形非常接近
 ![alt text](samples/hard_samples/image-20260418144140682.png)
 ![alt text](samples/hard_samples/image-20260418145138519.png)
 
 人工难以判断
-无面单 / 无包裹？类别边界清晰不足
+（无面单 / 无包裹？）类别边界清晰不足
 ![alt text](samples/hard_samples/image-20260418141655666.png)
 
 容易把带文字的封条识别为面单
 ![alt text](samples/hard_samples/image-20260418144250751.png)
 
-外形与条码非常接近，但不是快递扫描用的条码
+包裹上张贴的标签外形与条码非常接近，但不是物流扫描用的条码
 ![alt text](samples/hard_samples/image-20260418144519881.png)
 ![alt text](samples/hard_samples/image-20260418144836139.png)
 
@@ -423,7 +423,7 @@ TruncatedBarcode       0.90      0.85      0.87        61
 ![alt text](samples/hard_samples/image-20260418145423706.png)
 ![alt text](samples/hard_samples/image-20260418145530372.png)
 ![alt text](samples/hard_samples/image-20260418145744695.png)
-本张甚至难以人工判别
+（本张甚至难以人工判别）
 ![alt text](samples/hard_samples/image-20260418145956443.png)
 
 包裹数量不止一个，而且被识别包裹并非位于图像中央
@@ -437,6 +437,7 @@ TruncatedBarcode       0.90      0.85      0.87        61
 非包裹外形类似面单
 ![alt text](samples/hard_samples/image-20260418152439912.png)
 ![alt text](samples/hard_samples/image-20260418152539521.png)
+
 
 
 ## 14. 后续改进方向
