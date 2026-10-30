@@ -23,6 +23,8 @@ myenv/
 !checkpoints/checkpoints_resnet34_v6/best_f1_model.pth
 !checkpoints/checkpoints_resnet34_v6_round_3/best_f1_model.pth
 !checkpoints/checkpoints_resnet34_v6_round_final/best_f1_model.pth
+# model
+model/
 
 # system files
 .DS_Store

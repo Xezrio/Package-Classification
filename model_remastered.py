@@ -1,21 +1,22 @@
 import numpy as np
 import pandas as pd
-import torch, torchvision, torchmetrics
 import matplotlib.pyplot as plt
+import torch, torchvision
 from torch import nn
 from torch.utils.data import dataset, DataLoader, WeightedRandomSampler
 from torchvision import models, datasets, transforms
 from torchvision.models import ResNet34_Weights
+from torchmetrics import ConfusionMatrix
+from torchmetrics.classification import MulticlassF1Score
 from timeit import default_timer as timer
 from pathlib import Path
 from tqdm.auto import tqdm
 from helper_functions import print_dataset_attributes
-from torchmetrics import ConfusionMatrix
 from mlxtend.plotting import plot_confusion_matrix
 
 
 # Configs
-EPOCHS = 8
+EPOCHS = 20
 BATCH_SIZE = 32
 LR = 0.001
 SEED = 42
@@ -23,6 +24,7 @@ NUM_WORKERS = 0
 INPUT_H = 224
 INPUT_W = 224
 DATA_DIR = Path("data/pizza_steak_sushi")
+SAVE_PATH = Path("model")
 
 
 # Setup device agnostic code
@@ -128,16 +130,16 @@ def train_step(model: nn.Module,
 
     model.to(device)
     model.train()
-    for batch, (X, y) in tqdm(enumerate(train_loader)):
+    for batch, (X, y) in enumerate(train_loader):
         X, y = X.to(device), y.to(device)
         # 1. Forward pass
         y_logits = model(X)
-        y_pred_probs = torch.softmax(y_logits, dim=1)
-        y_pred_label = torch.argmax(y_pred_probs, dim=1)
+        # y_pred_probs = torch.softmax(y_logits, dim=1)
+        y_pred_label = torch.argmax(y_logits, dim=1)
 
         # 2. Calculate the one batch loss
         loss = loss_fn(y_logits, y)
-        train_loss += loss.item() # Use item here to avoid mps tensor get into numpy and avoid extra computation cost
+        train_loss += loss.item() # Use item here to avoid mps tensor get into numpy and avoid extra comp   utation cost
         train_acc += (y_pred_label == y).sum().item() / len(y)
 
         # 3. Optimizer zero grad
@@ -160,6 +162,7 @@ def train_step(model: nn.Module,
 def test_step(model: nn.Module, 
               test_loader: DataLoader, 
               loss_fn: nn.Module = nn.CrossEntropyLoss(), 
+              num_classes: int = 1, 
               device = device):
 
     """Perform test step for one epoch."""
@@ -167,21 +170,30 @@ def test_step(model: nn.Module,
     # Set up test loss and test accuracy
     test_loss, test_acc = 0, 0
 
+    # Set up test macro-f1
+    f1_metric = MulticlassF1Score(
+        num_classes=num_classes, 
+        average="macro"
+    ).to(device)
+    f1_metric.reset()
+
     # Setup test pred labels for plotting (confusion matrix)
     test_pred_labels = []
 
     model.to(device)
     model.eval()
     with torch.inference_mode():
-        for batch, (X, y) in tqdm(enumerate(test_loader)):
+        for batch, (X, y) in enumerate(test_loader):
             # Put the data to target device
             X, y = X.to(device), y.to(device)
 
             # 1. Forward Pass
             test_logits = model(X)
-            test_pred_probs = torch.softmax(test_logits, dim=1)
-            test_pred_label = torch.argmax(test_pred_probs, dim=1)
+            # test_pred_probs = torch.softmax(test_logits, dim=1)
+            test_pred_label = torch.argmax(test_logits, dim=1)
             test_pred_labels.append(test_pred_label)
+            # Update f1 metric by accumulating the results in each batch, and calculate them eventually after test step by compute()
+            f1_metric.update(test_pred_label, y)
 
             # 2. Calculate the loss and acc
             loss = loss_fn(test_logits, y)
@@ -192,10 +204,13 @@ def test_step(model: nn.Module,
         test_loss /= len(test_loader)
         test_acc /= len(test_loader)
 
+        # Compute the macro-f1
+        test_macro_f1 = f1_metric.compute().item()
+
     # Concat the test pred labels from each batch in one epoch
     test_pred_labels = torch.cat(test_pred_labels)
 
-    return test_loss, test_acc, test_pred_labels
+    return test_loss, test_acc, test_pred_labels, test_macro_f1
 
 
 # Trainer
@@ -205,6 +220,7 @@ def train(model: nn.Module,
           loss_fn: nn.Module = nn.CrossEntropyLoss(), 
           optimizer = torch.optim.Optimizer, # ?
           epochs: int = 2, 
+          num_classes: int = 1, 
           device = device) -> dict[str, list]:
 
     """Perform training and testing loops and return results dictionary."""
@@ -213,9 +229,13 @@ def train(model: nn.Module,
     print(f"Training on: {next(model.parameters()).device}")
 
     # Save results dictionary for dataframe and plot
-    results = {"train_loss": [], "train_acc": [], "test_loss": [], "test_acc": []}
+    results = {"train_loss": [], "train_acc": [], "test_loss": [], "test_acc": [], "test_f1": []}
 
-    for epoch in tqdm(range(epochs)):
+    # Setup macro f1 metric
+    best_f1 = 0.0
+
+    # for epoch in tqdm(range(epochs)):
+    for epoch in range(epochs):
         # Train
         train_loss, train_acc = train_step(
             model=model, 
@@ -225,10 +245,11 @@ def train(model: nn.Module,
             device=device
         )
         # Test
-        test_loss, test_acc, test_pred_labels = test_step(
+        test_loss, test_acc, test_pred_labels, test_f1 = test_step(
             model=model, 
             test_loader=test_loader, 
             loss_fn=loss_fn, 
+            num_classes=num_classes, 
             device=device
         )
         # Save the results per epoch to results dict
@@ -236,9 +257,22 @@ def train(model: nn.Module,
         results["train_acc"].append(train_acc)
         results["test_loss"].append(test_loss)
         results["test_acc"].append(test_acc)
+        results["test_f1"].append(test_f1)
 
         # Print out what's happenin'
-        print(f"Epoch: {epoch + 1} | Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f} | Test Loss: {test_loss:.4f} | Test Acc: {test_acc:.2f}")
+        print(f"Epoch: {epoch + 1} | Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f} | Test Loss: {test_loss:.4f} | Test Acc: {test_acc:.2f} | Test F1: {test_f1:.4f}")
+
+        # Save the model if Macro-F1 improved
+        if test_f1 > best_f1:
+            best_f1 = test_f1
+            save_model(
+                model=model, 
+                save_path=SAVE_PATH, 
+                model_name="best_f1_model.pth"
+            )
+            # Print out best result and save info
+            print(f"Macro-F1 new best: {best_f1:.4f}. Model state dict saved.")
+
 
     return results
 
@@ -272,7 +306,6 @@ def plot_loss_and_acc(results: dict[str, list]):
     plt.legend();
 
 
-
 # Plot test confusion matrix
 def plot_test_confusion_matrix(class_names: list[str], 
                           test_pred_label: torch.Tensor, 
@@ -289,6 +322,34 @@ def plot_test_confusion_matrix(class_names: list[str],
         class_names=class_names, 
         figsize=(7, 7)
     )
+
+
+# Save and load model
+def save_model(model: nn.Module, 
+                     save_path: Path = SAVE_PATH, # you must put the default argument after the non-default argument
+                     model_name: str = "best_model.pth"): 
+
+    """Save the model to a given path in a given name."""
+
+    # Make directory of the save path
+    save_path.mkdir(parents=True, 
+                    exist_ok=True)
+    model_save_path = save_path / model_name
+
+    # Save the model state dict
+    torch.save(
+        obj=model.state_dict(), 
+        f=model_save_path
+    )
+
+
+# Load a saved model state dict
+def load_model(model: nn.Module, 
+               load_path: Path = SAVE_PATH):
+
+    """Load a saved model state dict from a given path (specific model name in path required)."""
+
+    return model.load_state_dict(torch.load(f=load_path))
 
 
 # Build transforms
@@ -309,7 +370,7 @@ def build_transforms(input_height = INPUT_H, input_width = INPUT_W):
 
 # Main function
 def main():
-    # Set seed
+    # Set seed for reproducability
     torch.manual_seed(SEED)
     torch.cuda.manual_seed(SEED)
     torch.mps.manual_seed(SEED)
@@ -325,7 +386,7 @@ def main():
         test_transform=test_transform
     )
 
-    # Setup sampler using WeightedRandomSampler for better sample distribution for training
+    ### Setup sampler using WeightedRandomSampler for better sample distribution for training
     targets = train_set.targets # it looks like [0, 0, 0, 1, 1, ..., 1, 2, 2]
     class_counts = torch.bincount(torch.tensor(targets)) # pass in a tensor, you get a tensor shaped like tensor([78, 75, 72])
     class_weights = (1. / class_counts).numpy() # turn tensor into numpy ndarray [1/78, 1/75, 1/72]
@@ -355,7 +416,7 @@ def main():
 
     # Instantiate the model
     model = ResNet34Remix(
-        input_shape=3, 
+        input_shape=3, # color_channels
         output_shape=len(train_set.classes)
     )
 
@@ -377,6 +438,7 @@ def main():
         loss_fn=loss_fn, 
         optimizer=optimizer, 
         epochs=EPOCHS, 
+        num_classes=len(test_set.classes), 
         device=device
     )
     end_time = timer()
@@ -386,11 +448,25 @@ def main():
     # Plot the loss and accuracy results
     plot_loss_and_acc(results)
 
-    # Run a test step using the latest model parameters
+    ### Run a test step using the best test f1 model parameters
+    # Instantiate the unload model and put it to target device
+    loaded_model = ResNet34Remix(
+        input_shape=3, 
+        output_shape=len(test_set.classes)
+    ).to(device)
+
+    # Load model state dict
+    load_model(
+        model=loaded_model, 
+        load_path=SAVE_PATH / "best_f1_model.pth"
+    )
+
+    # Run a test step (one epoch)
     test_result = test_step(
-        model=model, 
+        model=loaded_model, 
         test_loader=test_loader, 
         loss_fn=loss_fn, 
+        num_classes=len(test_set.classes), 
         device=device
     )
     test_pred_labels = test_result[2]
@@ -401,7 +477,7 @@ def main():
         test_pred_label=test_pred_labels, 
         test_targets=test_set.targets
     )
-
+    
     # Block the window from closing after training finished
     plt.show(block=True)
 
