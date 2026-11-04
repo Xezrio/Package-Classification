@@ -1,14 +1,13 @@
 # Package Classification
 
-工业场景包裹图像分类项目。
-
-当前主要完成的是 **4 类 NR 类型分类**，并基于高分辨率灰度图像完成了数据清洗、验证集重构、难例审计和模型优化。
+工业场景流水线包裹面单图像分类项目。 **对四类 NR (No-Read, 未读取到条码) 类型分类**，并基于高分辨率灰度图完成了数据集建立、数据审计与清洗、模型建立与优化等工作。
+数据集预处理、模型训练代码和测试代码都是人工完成的。
 
 ---
 
-## 项目概述
+## 概述
 
-本项目面向工业场景中的包裹识别失败图像（NR 图像）分类任务，当前核心目标是对以下 4 类进行分类：
+本项目面向工业场景中的包裹识别失败图像（NR 图像）分类任务，当前目标是对以下 4 类进行分类：
 
 - `NoPackage`
 - `NoWaybill`
@@ -20,13 +19,10 @@
 在项目推进过程中，主要完成了以下工作：
 
 - 多轮数据集审计与清洗
-- 验证集重构与扩充
-- 由 RGB 处理切换为灰度单通道输入
-- 屏蔽图像左下角缩略图区域
-- 提高输入分辨率
+- 验证集、测试集重构与扩充
+- 模型改进
 - 针对关键混淆对进行定向分析与清洗
-- 增加极难样本集合 `hard_val`
-
+- 增加极难样本集合 `hard_val`帮助 tuning  
 ---
 
 ## 最终结果
@@ -35,72 +31,132 @@
 
 - **Backbone**: ResNet34
 - **Input Size**: 560 × 700
-- **Batch Size**: 16
-- **Best Epoch**: 14
-- **Best Accuracy**: 0.9258
-- **Best Macro-F1**: 0.9205
+- **Batch Size**: 32
+- **Epoch**: 20
+- **LR**: 1e-4
+- **Test Macro-F1**: 0.9026
+- **Test Accuracy**: 0.9108
+- **Best Val F1**: ~0.92
 
-### 最终验证集结果
+### 测试集结果
 
 ```text
+Test Results:
                   precision    recall  f1-score   support
-       NoPackage       1.00      0.87      0.93        60
-       NoWaybill       0.91      0.99      0.95       112
-TruncatedBarcode       0.90      0.85      0.87        61
- WrinkledWaybill       0.92      0.94      0.93        50
 
-        accuracy                           0.93       283
-       macro avg       0.93      0.91      0.92       283
-    weighted avg       0.93      0.93      0.93       283
+       NoPackage       0.97      0.95      0.96        37
+       NoWaybill       0.94      0.94      0.94       244
+TruncatedBarcode       0.82      0.77      0.80        83
+ WrinkledWaybill       0.88      0.96      0.92        51
+
+        accuracy                           0.91       415
+       macro avg       0.90      0.91      0.90       415
+    weighted avg       0.91      0.91      0.91       415
 ```
 
-### 最终混淆矩阵
+### 测试集混淆矩阵
+
+![alt text](<fig/Test Confusion Matrix.png>)
+
+### 测试集随机样本推理
+
+![alt text](fig/Predictions.png)
+
+### 模型总结
+
+测试集推理大概需要 30s。运行在 MacBook 本地。
 
 ```text
-GT \ Pred            NoPackage   NoWaybill   TruncatedBarcode   WrinkledWaybill
-NoPackage            52          2           4                  2
-NoWaybill            0           111         0                  1
-TruncatedBarcode     0           8           52                 1
-WrinkledWaybill      0           1           2                  47
+===============================================================================================
+Layer (type:depth-idx)                        Output Shape              Param #
+===============================================================================================
+ResNet34Remix                                 [1, 4]                    --
+├─ResNet: 1-1                                 [1, 4]                    --
+│    └─Conv2d: 2-1                            [1, 64, 280, 350]         3,136
+│    └─BatchNorm2d: 2-2                       [1, 64, 280, 350]         128
+│    └─ReLU: 2-3                              [1, 64, 280, 350]         --
+│    └─MaxPool2d: 2-4                         [1, 64, 140, 175]         --
+│    └─Sequential: 2-5                        [1, 64, 140, 175]         --
+│    │    └─BasicBlock: 3-1                   [1, 64, 140, 175]         73,984
+│    │    └─BasicBlock: 3-2                   [1, 64, 140, 175]         73,984
+│    │    └─BasicBlock: 3-3                   [1, 64, 140, 175]         73,984
+│    └─Sequential: 2-6                        [1, 128, 70, 88]          --
+│    │    └─BasicBlock: 3-4                   [1, 128, 70, 88]          230,144
+│    │    └─BasicBlock: 3-5                   [1, 128, 70, 88]          295,424
+│    │    └─BasicBlock: 3-6                   [1, 128, 70, 88]          295,424
+│    │    └─BasicBlock: 3-7                   [1, 128, 70, 88]          295,424
+│    └─Sequential: 2-7                        [1, 256, 35, 44]          --
+│    │    └─BasicBlock: 3-8                   [1, 256, 35, 44]          919,040
+│    │    └─BasicBlock: 3-9                   [1, 256, 35, 44]          1,180,672
+│    │    └─BasicBlock: 3-10                  [1, 256, 35, 44]          1,180,672
+│    │    └─BasicBlock: 3-11                  [1, 256, 35, 44]          1,180,672
+│    │    └─BasicBlock: 3-12                  [1, 256, 35, 44]          1,180,672
+│    │    └─BasicBlock: 3-13                  [1, 256, 35, 44]          1,180,672
+│    └─Sequential: 2-8                        [1, 512, 18, 22]          --
+│    │    └─BasicBlock: 3-14                  [1, 512, 18, 22]          3,673,088
+│    │    └─BasicBlock: 3-15                  [1, 512, 18, 22]          4,720,640
+│    │    └─BasicBlock: 3-16                  [1, 512, 18, 22]          4,720,640
+│    └─AdaptiveAvgPool2d: 2-9                 [1, 512, 1, 1]            --
+│    └─Linear: 2-10                           [1, 4]                    2,052
+===============================================================================================
+Total params: 21,280,452 (21.28 M)
+Trainable params: 21,280,452
+Non-trainable params: 0
+Total mult-adds (Units.GIGABYTES): 28.28
+===============================================================================================
+Input size (MB): 1.57
+Forward/backward pass size (MB): 469.13
+Params size (MB): 85.12
+Estimated Total Size (MB): 555.82
+===============================================================================================
 ```
 
 ### 各阶段结果汇总
 
-| 版本       | 主要改动                                            | Accuracy | Macro-F1 | 说明                       |
-| ---------- | --------------------------------------------------- | -------: | -------: | -------------------------- |
-| Baseline 0 | ResNet50 初始可用模型                               |     0.75 |     0.65 | 初始 baseline              |
-| v3         | ResNet18 + 224 输入 + 权重调整                      |     0.81 |     0.77 | 首次较稳定提升             |
-| v4         | 头部训练 + 微调策略 + 新权重形式                    |     0.78 |     0.70 | 效果不如 v3 稳定           |
-| v5         | WeightedRandomSampler + class weight                |     0.75 |     0.63 | 说明当时主瓶颈不在采样策略 |
-| v6 round 1 | ResNet34 + 448×560 + 灰度 + 缩略图屏蔽 + 扩充验证集 |     0.86 |     0.86 | 联合改进阶段               |
-| v6 round 2 | 数据清洗 + 验证集重构                               |     0.89 |     0.89 | 数据治理带来明显提升       |
-| v6 round 3 | 提升分辨率到 560×700                                |     0.92 |     0.92 | 分辨率提升明确有效         |
-| v6 final   | 小规模再清洗 + 最终封板                             |   0.9258 |   0.9205 | 最终版本      
+| 版本       | 主要改动                                            | Accuracy | Val Macro-F1 | 
+| ---------- | --------------------------------------------------- | -------: | -------:   | 
+| Baseline 0 | ResNet50 初始可用模型                               |     0.75 |     0.65 | 
+| v3         | ResNet18 + 224x224 输入 + 权重调整                      |     0.81 |     0.77 | 
+| v4         | 更换预训练权重                    |     0.78 |     0.70 | 
+| v5         | WeightedRandomSampler + class weight                |     0.75 |     0.63 | 
+| v6 round 1 | ResNet34 + 448×560 + 灰度 + 缩略图屏蔽 + 扩充验证集 |     0.86 |     0.86 | 
+| v6 round 2 | 数据清洗 + 验证集重构                               |     0.89 |     0.89 | 
+| v6 round 3 | 提升分辨率到 560×700                                |     0.92 |     0.92 | 
+| v6 final   | 小规模再清洗                             |   0.9258 |   0.9205 | 
+| remastered   | 恢复缩略图，重构代码                            |   0.92 |   0.93 | 
 
-
-详见 `Experiments.md`。
 
 ---
 
-## 数据集说明
+## 数据集
 
-### 当前 4 类训练集
+### 训练集 Train
 
-总计约 **9029 张图像**。
+总计约 **9029 张图像**。约 90%
 
 - `WrinkledWaybill`: 1465
 - `NoPackage`: 507
 - `TruncatedBarcode`: 1927
 - `NoWaybill`: 5130
 
-### 当前 4 类验证集
+### 验证集 Val
 
-总计 **283 张图像**。
+总计 **283 张图像**。约 3%。这里保持各类别均衡，更好地衡量模型分辨各类别图像的能力
 
 - `WrinkledWaybill`: 50
 - `NoPackage`: 60
 - `TruncatedBarcode`: 61
 - `NoWaybill`: 112
+
+### 测试集 Test
+
+总计 **415 张图像**。约 7%。这里按照实际数据分布随机抽取，符合实际部署数据分布。
+测试集中的包裹均与训练集和验证集中的不同，而且训练和挑参没有参考测试集。  
+
+- `WrinkledWaybill`: 51
+- `NoPackage`: 37
+- `TruncatedBarcode`: 83
+- `NoWaybill`: 244
 
 ### 数据集大小
 
@@ -108,7 +164,7 @@ WrinkledWaybill      0           1           2                  47
 
 ### 图像：
 数据集采集于一物流公司的传送带，数据由三台工业相机采集，分别从三个不同角度（顶部、前方、后方）拍摄
-输出图像为灰度图，分辨率为 **5440 x 4352**
+输出图像为灰度图，原图分辨率为 **5440 x 4352**，经过预处理会`transforms.Resize()`
 
 ## 相机视角
 
@@ -133,11 +189,9 @@ WrinkledWaybill      0           1           2                  47
 
 用于保存少量极难样本，仅用于额外参考，不参与 best model 选择。
 
-当前规模较小，因此结果仅作定性参考，不作为核心指标。
-
 ---
 
-## 类别定义
+## 分类说明
 
 ### `NoPackage`
 
@@ -271,9 +325,7 @@ WrinkledWaybill      0           1           2                  47
 
 ---
 
-## 完整 9 类需求体系
-
-按优先级排序如下：
+按优先级排序：
 
 1. `None`
 2. `NoPackage`
@@ -284,79 +336,10 @@ WrinkledWaybill      0           1           2                  47
 7. `Reflection`
 8. `InsufficientLighting`
 9. `BlurryFocus`
-
-### 当前完整 9 类数据分布
-
-#### Train
-
-- `Reflection`: 50
-- `WrinkledWaybill`: 1465
-- `NoPackage`: 507
-- `InsufficientLighting`: 46
-- `None`: 806
-- `TruncatedBarcode`: 1927
-- `BlurryFocus`: 72
-- `BlurryWaybill`: 45
-- `NoWaybill`: 5130
-
-#### Val
-
-- `Reflection`: 4
-- `WrinkledWaybill`: 50
-- `NoPackage`: 60
-- `InsufficientLighting`: 1
-- `None`: 9
-- `TruncatedBarcode`: 61
-- `BlurryFocus`: 5
-- `BlurryWaybill`: 1
-- `NoWaybill`: 112
-
+### 
 ---
 
-## 模型与训练
-
-### 当前最佳配置
-
-- **Backbone**: ResNet34
-- **Input Size**: 560 × 700
-- **Batch Size**: 16
-- **Optimizer**: AdamW
-- **输入形式**: 灰度单通道
-- **预处理**:
-    - 屏蔽左下角缩略图区域
-    - Resize
-    - Normalize
-
-### 高分辨率有效
-
-本任务高度依赖局部细节，例如：
-
-- 条码截断区域只占很小一部分
-- 面单褶皱属于局部纹理特征
-- 原始图像分辨率很高，而目标区域可能较小
-
-将输入分辨率从较低分辨率提升到 **560 × 700** 后，模型性能获得了明确提升。
-
----
-
-## 环境说明
-
-### 硬件
-
-- **GPU**: NVIDIA A40
-- **训练显存占用**: 约 3716 MiB
-
-### 使用 RAM Disk 加速训练
-
-```bash
-sudo mkdir -p /mnt/ramdisk
-sudo mount -t tmpfs -o size=18G tmpfs /mnt/ramdisk
-rsync -av /mnt/F/xezrio/PackageClassification/dataset/dataset_9_class /mnt/ramdisk/
-```
-
----
-
-## 常用命令（仅自用）
+## 常用命令（自用）
 
 ### 进入项目
 
@@ -378,18 +361,33 @@ find . -maxdepth 1 -type d -exec sh -c "echo -n '{}: '; find '{}' -maxdepth 1 -t
 du -h --max-depth=1
 ```
 
+### 使用 RAM Disk 加速训练
+
+```bash
+sudo mkdir -p /mnt/ramdisk
+sudo mount -t tmpfs -o size=18G tmpfs /mnt/ramdisk
+rsync -av /mnt/F/xezrio/PackageClassification/dataset/dataset_9_class /mnt/ramdisk/
+```
+
+### Tmux
+
+```bash
+tmux attatch -t 0
+```
+
+
 ---
 
 ## Quick Start
 
-### 1. 克隆项目并进入目录
+### 1. 
 
 ```sh
 git clone https://github.com/Xezrio/Package-Classification.git
 cd Package-Classification
 ```
 
-### 2. 创建并激活 Python 环境
+### 2. Python 环境
 
 ```sh
 python3 -m venv myenv
@@ -399,53 +397,36 @@ pip install -r requirements.txt
 
 ### 3. 准备数据集
 
-将数据集整理为 ImageFolder 结构，例如：
+将数据集整理为 ImageFolder 结构：
 ```sh
-dataset_9_class/
+dataset_4_class/
 ├── train/
 │   ├── NoPackage/
 │   ├── NoWaybill/
 │   ├── TruncatedBarcode/
 │   └── WrinkledWaybill/
 ├── val/
-│   ├── NoPackage/
-│   ├── NoWaybill/
-│   ├── TruncatedBarcode/
-│   └── WrinkledWaybill/
-└── hard_val/   # 可选，仅用于极难样本参考
-    ├── NoPackage/
-    ├── NoWaybill/
-    ├── TruncatedBarcode/
-    └── WrinkledWaybill/
+└── test/
 ```
 
 ### 4. 训练
 
-当前最终版本训练脚本为：
 ```sh
-resnet34_560x700_final.py
+python3 model_remastered.py
 ```
-
-使用审计脚本分析高loss样本、低置信样本与关键混淆对：
-```sh
-audit_for_v6.py
-```
-
 
 ---
 
-## 结论
+## 结果
 
-本项目从一个初始 4 类 baseline 出发，经过多轮数据治理、验证集重构和模型优化，最终达到：
+本项目从一个初始 4 类 baseline 出发，从~0.62 Val Macro-F1，经过多轮数据治理、验证集重构和模型优化，最终达到：
 
-- **Accuracy**: 0.9258
-- **Macro-F1**: 0.9205
-
-当前主验证集上模型已经达到较高且较稳定的性能。
-
+- **Test Accuracy**: 0.91
+- **Test Macro-F1**: 0.90
 ---
 
 ### 难点主要来源（图例见`Experiments.md`）
+
 - 多特征共存但强制单标签（单个数据可以有多种错误，但是需求按照优先级只标注单标签）
 - 有自动扩标历史（训练集内含脏数据）
 - 数据集类别数据非常不均衡，最大类别数量可达最小类别数量约十倍
@@ -454,9 +435,8 @@ audit_for_v6.py
 
 ---
 
-### 后续工作
+### 后续改进
 
-进一步提升的主要瓶颈不再是基础模型结构，而更可能来自：
 - 极难样本
 - 标签边界模糊
 - 单标签任务对多特征样本的天然限制

@@ -11,12 +11,11 @@ from torchmetrics.classification import MulticlassF1Score
 from timeit import default_timer as timer
 from pathlib import Path
 from tqdm.auto import tqdm
-from helper_functions import print_dataset_attributes
 from mlxtend.plotting import plot_confusion_matrix
 
 
 # Configs
-EPOCHS = 25
+EPOCHS = 20
 BATCH_SIZE = 32
 LR = 1e-4
 SEED = 42
@@ -27,6 +26,7 @@ COLOR_CHANNELS = 1
 WEIGHT_DECAY = 5e-4
 DATA_DIR = Path("data/package_4_class")
 SAVE_PATH = Path("model")
+FIG_PATH = Path("fig")
 
 
 # Setup device agnostic code
@@ -311,21 +311,25 @@ def plot_loss_and_acc(results: dict[str, list]):
 
 
 # Plot val confusion matrix
-def plot_val_confusion_matrix(class_names: list[str], 
-                          val_pred_label: torch.Tensor, 
-                          val_targets: list):
+def plot_the_confusion_matrix(class_names: list[str], 
+                          pred_label: torch.Tensor, 
+                          targets: list, 
+                          fig_name: str):
 
-    """Plot confusion matrix on val set."""
+    """Plot confusion matrix on a given set."""
 
     confmat = ConfusionMatrix(task='multiclass', 
                               num_classes=len(class_names))
-    confmat_tensor = confmat(preds=val_pred_label.cpu(), # these are on gpu (if available), so we put them on cpu
-                             target=torch.Tensor(val_targets)) # it receives tensors (Tensors are created on cpu by default)
+    confmat_tensor = confmat(preds=pred_label.cpu(), # these are on gpu (if available), so we put them on cpu
+                             target=torch.Tensor(targets)) # it receives tensors (Tensors are created on cpu by default)
     fig, ax = plot_confusion_matrix(
         conf_mat=confmat_tensor.numpy(), 
         class_names=class_names, 
         figsize=(8, 8)
     )
+
+    # Save the conf mat
+    plt.savefig(FIG_PATH / fig_name)
 
 
 # Save and load model
@@ -415,11 +419,9 @@ def main():
         sampler=sampler
     )
 
-    # Check the dataset attributes
-    print_dataset_attributes(
-        train_set=train_set, 
-        val_set=val_set
-    )
+    # Print the dataset attributes
+    print(f"Train samples: {len(train_set)}")
+    print(f"Val samples: {len(val_set)}")
 
     # Instantiate the model
     model = ResNet34Remix(
@@ -479,11 +481,12 @@ def main():
     )
     val_pred_labels = val_result[2]
 
-    # Plot the val confusion matrix
-    plot_val_confusion_matrix(
+    # Plot the confusion matrix on val
+    plot_the_confusion_matrix(
         class_names=val_set.classes, 
-        val_pred_label=val_pred_labels, 
-        val_targets=val_set.targets
+        pred_label=val_pred_labels, 
+        targets=val_set.targets, 
+        fig_name="Val Confustion Matrix.png"
     )
     
     # Block the window from closing after training finished
