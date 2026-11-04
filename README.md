@@ -14,14 +14,12 @@
 - `TruncatedBarcode`
 - `WrinkledWaybill`
 
-项目后续可以扩展到完整的 **9 类 NR 类型体系**。
-
 在项目推进过程中，主要完成了以下工作：
 
 - 多轮数据集审计与清洗
 - 验证集、测试集重构与扩充
 - 模型改进
-- 针对关键混淆对进行定向分析与清洗
+- 针对关键混淆，进行分析与清洗
 - 增加极难样本集合 `hard_val`帮助 tuning  
 ---
 
@@ -37,6 +35,8 @@
 - **Test Macro-F1**: 0.9026
 - **Test Accuracy**: 0.9108
 - **Best Val F1**: ~0.92
+- **Params**: 21.28M
+- **测试集推理时间**: ~30s (Mac Local)  
 
 ### 测试集结果
 
@@ -123,7 +123,7 @@ Estimated Total Size (MB): 555.82
 | v6 round 2 | 数据清洗 + 验证集重构                               |     0.89 |     0.89 | 
 | v6 round 3 | 提升分辨率到 560×700                                |     0.92 |     0.92 | 
 | v6 final   | 小规模再清洗                             |   0.9258 |   0.9205 | 
-| remastered   | 恢复缩略图，重构代码                            |   0.92 |   0.93 | 
+| remastered   | 恢复缩略图，重构代码                            |   0.92 |   0.92 | 
 
 
 ---
@@ -150,8 +150,8 @@ Estimated Total Size (MB): 555.82
 
 ### 测试集 Test
 
-总计 **415 张图像**。约 7%。这里按照实际数据分布随机抽取，符合实际部署数据分布。
-测试集中的包裹均与训练集和验证集中的不同，而且训练和挑参没有参考测试集。  
+总计 **415 张图像**。约 7%。这里按照实际数据分布随机抽取，还原实际部署数据分布。
+测试集中的包裹均与训练集和验证集中的不同，而且训练和挑选模型没有参考测试集。  
 
 - `WrinkledWaybill`: 51
 - `NoPackage`: 37
@@ -415,6 +415,12 @@ dataset_4_class/
 python3 model_remastered.py
 ```
 
+### 5. 测试
+
+```sh
+python3 test.py
+```
+
 ---
 
 ## 结果
@@ -423,6 +429,8 @@ python3 model_remastered.py
 
 - **Test Accuracy**: 0.91
 - **Test Macro-F1**: 0.90
+- **Val Macro-F1**: 0.92
+
 ---
 
 ### 难点主要来源（图例见`Experiments.md`）
