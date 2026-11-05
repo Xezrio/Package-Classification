@@ -368,7 +368,7 @@ def build_transforms(input_height = INPUT_H, input_width = INPUT_W):
         transforms.RandomRotation(degrees=4), 
         transforms.ColorJitter(brightness=0.08, contrast=0.08), 
         transforms.ToTensor(), 
-        transforms.Normalize(mean=[0.5], std=[0.25]) # for gray scale data, let the data 0-centered, easier for neural networks to train
+        transforms.Normalize(mean=[0.5], std=[0.25]) # for gray scale data, let the data 0-centered (only if matches expectation), easier for neural networks to train
     ])
     val_transform = transforms.Compose([
         transforms.Grayscale(num_output_channels=1), 
