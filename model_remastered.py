@@ -106,12 +106,12 @@ class ResNet34Remix(nn.Module):
                 kernel_size=original_conv.kernel_size, 
                 stride=original_conv.stride, 
                 padding=original_conv.padding, 
-                bias=False
+                bias=False # this conv layer is followed by BN (the biases counteract), so we don't need bias here; however when followed by ReLU we can keep bias
             )
 
             # Copy the weights from original conv layer to the new conv layer
             with torch.inference_mode():
-                replace_conv.weight.copy_(original_conv.weight.mean(dim=1, keepdim=True)) # ?
+                replace_conv.weight.copy_(original_conv.weight.mean(dim=1, keepdim=True))
 
             self.model.conv1 = replace_conv
             
@@ -222,7 +222,7 @@ def train(model: nn.Module,
           train_loader: DataLoader, 
           val_loader: DataLoader, 
           loss_fn: nn.Module = nn.CrossEntropyLoss(), 
-          optimizer = torch.optim.Optimizer, # ?
+          optimizer = torch.optim.Optimizer,
           epochs: int = 2, 
           num_classes: int = 1, 
           device = device) -> dict[str, list]:
